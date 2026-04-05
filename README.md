@@ -4,6 +4,70 @@ This project is a comprehensive demonstration of modern DevOps practices, focusi
 
 It features a high-performance TypeScript/Node.js API designed to simulate CPU-intensive workloads, allowing for empirical validation of Horizontal Pod Autoscaling (HPA) in a cloud-native environment.
 
+## 📌 Design Decisions
+
+- **CPU-based scaling (50% target)**  
+  I chose CPU utilization as the scaling metric because it provides deterministic and observable behavior in controlled environments. CPU-bound workloads allow clear validation of HPA reactions, unlike I/O-bound scenarios which may introduce noisy or delayed signals.
+
+- **CPU-intensive endpoint (`/heavy`)**  
+  The API includes a deliberately CPU-bound endpoint to simulate real pressure on the system. This ensures that scaling events are triggered reliably, making the behavior reproducible during load testing.
+
+- **Min/Max replicas (1–5)**  
+  A minimum of 1 replica reduces idle resource usage, while a maximum of 5 simulates constrained environments and prevents uncontrolled scaling during tests.
+
+- **Terraform for IaC**  
+  Terraform was used to provision Kubernetes resources to ensure reproducibility, version control, and alignment with real-world infrastructure workflows.
+
+- **k6 for load generation**  
+  k6 was selected for its simplicity and developer-friendly scripting model, allowing controlled and repeatable load patterns to validate autoscaling behavior.
+
+## ⚖️ Limitations
+
+- **Reactive scaling (not predictive)**  
+  HPA reacts to metrics after load increases, meaning there is always a delay before scaling occurs. :contentReference[oaicite:0]{index=0}
+
+- **CPU is not always the best metric**  
+  While CPU works well for this demo, real-world systems often require custom metrics such as request rate or latency.
+
+- **Local environment constraints (Minikube)**  
+  Minikube does not simulate real cluster behavior, especially node-level autoscaling.
+
+- **No Cluster Autoscaler**  
+  This demo scales pods only. In production, node scaling would be required to support higher workloads.
+
+- **Simplified traffic patterns**  
+  The load test uses synthetic traffic, which may not reflect real-world bursty or unpredictable workloads.
+
+## 🚀 Production Considerations
+
+In a production environment, this setup would evolve significantly:
+
+- **Managed Kubernetes (EKS / GKE / AKS)**  
+  Instead of Minikube, a managed Kubernetes service such as AWS EKS would be used for reliability, scalability, and operational support.
+
+- **Cluster Autoscaler**  
+  In addition to HPA, a Cluster Autoscaler would dynamically adjust the number of worker nodes based on pod scheduling needs.
+
+- **Advanced metrics (Prometheus / custom metrics)**  
+  Scaling would be based on business metrics (e.g., requests per second, queue size) instead of only CPU usage.
+
+- **Observability stack**  
+  Tools like Prometheus and Grafana would be used to monitor system behavior and scaling decisions.
+
+- **Ingress Controller (NGINX / ALB)**  
+  Production-grade ingress with TLS termination, routing rules, and load balancing.
+
+- **Stabilization windows & scaling policies**  
+  Fine-tuning scaling behavior to avoid oscillations and improve system stability.
+
+- **CI/CD pipeline**  
+  Automated build and deployment using pipelines (e.g., GitHub Actions, ArgoCD).
+
+- **Security & networking**  
+  - Network policies
+  - Secrets management (e.g., AWS Secrets Manager)
+  - IAM roles for service accounts
+
 ## 🏗️ Architecture Overview
 
 - **Application**: A Node.js Express API written in TypeScript.
